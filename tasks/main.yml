@@ -1,0 +1,58 @@
+---
+- name: Create portainer volunme
+  community.docker.docker_volume:
+    name: portainer_data
+    state: present
+
+- name: Create portainer service
+  community.docker.docker_swarm_service:
+    name: portainer
+    image: "{{ portainer_image }}:{{ portainer_tag }}"
+    mounts:
+      - type: volume
+        source: portainer_data
+        target: /data
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    mode: replicated
+    publish:
+      - target_port: 9000
+        published_port: "{{ portainer_published_port_http | default(omit) }}"
+        protocol: tcp
+        mode: "{{ portainer_network_mode }}"
+      - target_port: 9433
+        published_port: "{{ portainer_published_port_https | default(omit) }}"
+        protocol: tcp
+        mode: "{{ portainer_network_mode }}"
+    networks: "{{ portainer_networks | default([]) }}"
+    labels: "{{ portainer_labels }}"
+    reservations:
+      cpus: "{{ portainer_reservation_cpu }}"
+      memory: "{{ portainer_reservation_memory }}"
+    limits:
+      cpus: "{{ portainer_limit_cpu | default(omit) }}"
+      memory: "{{ portainer_limit_memory }}"
+    restart_config:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 60s
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose -q --tries=1 --spider http://localhost:9000/api/system/status || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    replicas: 1
+
+- name: Wait for portainer service to be ready
+  ansible.builtin.command: docker ps --filter "name=portainer" --format {% raw %}"{{.Status}}"{% endraw %}
+  register: container_status
+  until: "'healthy' in container_status.stdout"
+  retries: 5
+  delay: 10
+  changed_when: false

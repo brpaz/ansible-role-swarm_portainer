@@ -1,0 +1,12 @@
+---
+# defaults file for ansible-swarm-portainer
+portainer_image: "portainer/portainer-ce"
+portainer_tag: "2.30.1-alpine"
+portainer_reservation_cpu: 0.1
+portainer_reservation_memory: "64M"
+portainer_limit_memory: "256M"
+portainer_networks: []
+portainer_labels: {}
+portainer_published_port_http: 9000
+portainer_published_port_https: 9443
+portainer_network_mode: "ingress"
