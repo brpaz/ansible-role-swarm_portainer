@@ -22,5 +22,22 @@
       "depNameTemplate": "portainer/portainer-ce",
       "datasourceTemplate": "docker"
     }
+  ],
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github-actions"
+    }
   ]
 }
